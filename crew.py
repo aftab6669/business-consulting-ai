@@ -19,14 +19,18 @@ def run_business_consulting(
     business_challenge,
     business_objective,
     target_customers,
-    additional_information
+    additional_information,
 ):
+
+    # ==========================================================
+    # 1. CREATE LLM
+    # ==========================================================
 
     llm = get_llm()
 
-    # --------------------------------------------------
-    # CREATE AGENTS
-    # --------------------------------------------------
+    # ==========================================================
+    # 2. CREATE CONSULTING AGENTS
+    # ==========================================================
 
     researcher = create_business_researcher(llm)
 
@@ -42,9 +46,9 @@ def run_business_consulting(
 
     senior_partner = create_senior_strategy_partner(llm)
 
-    # --------------------------------------------------
-    # COMMON BUSINESS BRIEF
-    # --------------------------------------------------
+    # ==========================================================
+    # 3. BUSINESS BRIEF
+    # ==========================================================
 
     business_brief = f"""
 BUSINESS CONSULTING CLIENT BRIEF
@@ -72,238 +76,253 @@ Target Customers:
 
 Additional Information:
 {additional_information}
+
+IMPORTANT CONSULTING RULES:
+- Use only information provided by the client and reasonable analytical
+  assumptions.
+- Clearly label assumptions.
+- Do not invent financial figures.
+- Do not present assumptions as verified facts.
+- Identify important information gaps.
 """
 
-    # --------------------------------------------------
-    # TASK 1 — BUSINESS RESEARCH
-    # --------------------------------------------------
+    # ==========================================================
+    # 4. TASK 1 — BUSINESS RESEARCH
+    # ==========================================================
 
     research_task = Task(
         description=f"""
 {business_brief}
 
-Conduct a structured business and industry analysis.
+You are the Business Research Consultant.
 
-Analyze:
+Analyze the client's business and its broader industry environment.
 
-1. Business situation
+Cover:
+
+1. Current business situation
 2. Industry environment
 3. Important industry trends
 4. External opportunities
 5. External threats
-6. Key business issues
+6. Major business issues
 7. Strategic implications
+8. Information gaps
 
-Do not invent facts.
+Do not invent specific market statistics or facts.
 
-If information is unavailable, explicitly state:
+If information is unavailable, clearly state:
 "Information not provided."
 
 Produce a structured consulting analysis.
 """,
-
         expected_output="""
 A structured business and industry research report containing:
 
 - Business situation
 - Industry analysis
-- Key trends
+- Industry trends
 - Opportunities
 - Threats
 - Strategic implications
 - Information gaps
 """,
-
-        agent=researcher
+        agent=researcher,
     )
 
-    # --------------------------------------------------
-    # TASK 2 — MARKET & CUSTOMER
-    # --------------------------------------------------
+    # ==========================================================
+    # 5. TASK 2 — MARKET & CUSTOMER
+    # ==========================================================
 
     customer_task = Task(
         description=f"""
 {business_brief}
 
-Analyze the market and customers.
+You are the Market and Customer Analyst.
 
-Examine:
+Analyze the target market and customers.
 
-1. Target customer
-2. Potential customer segments
+Cover:
+
+1. Target customer profile
+2. Customer segments
 3. Customer needs
 4. Customer pain points
 5. Buying considerations
 6. Potential market opportunities
-7. Possible growth segments
+7. Growth segments
 8. Customer-related risks
+9. Strategic implications
 
-Clearly distinguish assumptions from information supplied by the client.
+Clearly distinguish client-provided information from analytical assumptions.
 """,
-
         expected_output="""
-A structured market and customer analysis covering:
+A structured market and customer analysis containing:
 
+- Customer profile
 - Customer segments
 - Customer needs
 - Pain points
+- Buying considerations
 - Market opportunities
 - Growth segments
 - Customer risks
 - Strategic implications
 """,
-
-        agent=customer_analyst
+        agent=customer_analyst,
     )
 
-    # --------------------------------------------------
-    # TASK 3 — COMPETITOR
-    # --------------------------------------------------
+    # ==========================================================
+    # 6. TASK 3 — COMPETITOR ANALYSIS
+    # ==========================================================
 
     competitor_task = Task(
         description=f"""
 {business_brief}
 
-Conduct a competitive strategy analysis.
+You are the Competitive Intelligence Consultant.
 
-Analyze:
+Analyze the competitive environment.
+
+Cover:
 
 1. Likely competitor categories
 2. Competitive positioning
-3. Products/services
+3. Products and services
 4. Pricing considerations
 5. Distribution considerations
-6. Competitive advantages
-7. Competitive weaknesses
+6. Potential competitive advantages
+7. Potential competitive weaknesses
 8. Market gaps
 9. Differentiation opportunities
+10. Competitive threats
 
-Do not invent specific competitor facts when the client has not
-provided sufficient information.
+Do not invent specific competitor facts.
 
-Clearly identify assumptions and information gaps.
+If specific competitor information is unavailable, discuss
+competitor categories and explain what information should be collected.
 """,
-
         expected_output="""
 A competitive intelligence report containing:
 
 - Competitor landscape
-- Positioning
+- Competitive positioning
 - Competitive factors
 - Market gaps
 - Differentiation opportunities
 - Competitive threats
-- Information limitations
+- Information gaps
 """,
-
-        agent=competitor_analyst
+        agent=competitor_analyst,
     )
 
-    # --------------------------------------------------
-    # TASK 4 — FINANCIAL
-    # --------------------------------------------------
+    # ==========================================================
+    # 7. TASK 4 — FINANCIAL ANALYSIS
+    # ==========================================================
 
     financial_task = Task(
         description=f"""
 {business_brief}
 
-Conduct a business and financial analysis.
+You are the Business and Financial Analyst.
 
-Analyze:
+Analyze the business model and financial drivers.
+
+Cover:
 
 1. Business model
 2. Revenue sources
 3. Cost structure
 4. Pricing considerations
 5. Profitability drivers
-6. Potential financial opportunities
-7. Investment requirements
+6. Investment requirements
+7. Financial opportunities
 8. Financial risks
-9. Missing financial information
+9. Financial information gaps
+10. Recommended financial KPIs
 
 Do NOT invent financial numbers.
 
-Where numbers are unavailable, explain which numbers management
-should collect.
-
-Include useful financial KPIs where appropriate.
+Where financial data is unavailable, identify the data management
+should collect before making investment or expansion decisions.
 """,
-
         expected_output="""
-A business and financial analysis covering:
+A business and financial analysis containing:
 
 - Business model
 - Revenue drivers
 - Cost drivers
-- Pricing
-- Profitability considerations
+- Pricing considerations
+- Profitability drivers
 - Investment requirements
+- Financial opportunities
 - Financial risks
-- Recommended KPIs
-- Missing financial data
+- Financial KPIs
+- Missing financial information
 """,
-
-        agent=financial_analyst
+        agent=financial_analyst,
     )
 
-    # --------------------------------------------------
-    # TASK 5 — STRATEGY
-    # --------------------------------------------------
+    # ==========================================================
+    # 8. TASK 5 — STRATEGY
+    # ==========================================================
 
     strategy_task = Task(
         description="""
-Using the outputs of the previous consulting tasks, develop a
-strategic analysis for the client.
+Review the outputs of the Business Research, Market and Customer,
+Competitive Intelligence, and Financial Analysis consultants.
 
-Develop several realistic strategic options.
+Develop practical strategic options.
 
-For every strategic option explain:
+For each strategic option explain:
 
 1. Strategic idea
-2. Rationale
+2. Strategic rationale
 3. Expected benefits
 4. Required capabilities
-5. Resources required
+5. Required resources
 6. Main risks
 7. Implementation requirements
 8. Key assumptions
 
-Do not use unsupported financial projections.
+Develop several realistic alternatives.
 
-Finish with a clear strategic direction based on the evidence
-available in the previous analyses.
+Do not invent unsupported financial projections.
+
+Conclude by identifying the strategic priorities that deserve
+management attention based on the available evidence.
 """,
-
         expected_output="""
 A strategic analysis containing:
 
 - Strategic priorities
 - Multiple strategic options
-- Benefits
+- Strategic rationale
+- Expected benefits
 - Required capabilities
+- Required resources
 - Risks
 - Assumptions
-- Strategic direction
+- Strategic priorities
 """,
-
         agent=strategy_consultant,
-
         context=[
             research_task,
             customer_task,
             competitor_task,
-            financial_task
-        ]
+            financial_task,
+        ],
     )
 
-    # --------------------------------------------------
-    # TASK 6 — RISK & IMPLEMENTATION
-    # --------------------------------------------------
+    # ==========================================================
+    # 9. TASK 6 — RISK & IMPLEMENTATION
+    # ==========================================================
 
     risk_task = Task(
         description="""
-Using all previous analyses, develop a practical implementation
-and risk management plan.
+Review all previous consulting analyses.
+
+Develop a practical risk management and implementation plan.
 
 Identify:
 
@@ -320,38 +339,38 @@ Then develop:
 - 3–6 month priorities
 - 6–12 month priorities
 - Longer-term roadmap
-- Recommended KPIs
 - Management milestones
+- Recommended KPIs
 
-Make the roadmap practical and measurable.
+Make the implementation plan practical and measurable.
+
+Do not invent unsupported financial targets.
 """,
-
         expected_output="""
-A practical implementation plan containing:
+A practical implementation and risk report containing:
 
 - Risk register
-- 90-day plan
-- 3–6 month plan
-- 6–12 month plan
+- Risk mitigation actions
+- 90-day action plan
+- 3–6 month priorities
+- 6–12 month priorities
 - Long-term roadmap
 - KPIs
 - Management milestones
 """,
-
         agent=risk_analyst,
-
         context=[
             research_task,
             customer_task,
             competitor_task,
             financial_task,
-            strategy_task
-        ]
+            strategy_task,
+        ],
     )
 
-    # --------------------------------------------------
-    # TASK 7 — FINAL REPORT
-    # --------------------------------------------------
+    # ==========================================================
+    # 10. TASK 7 — FINAL SENIOR PARTNER REPORT
+    # ==========================================================
 
     final_report_task = Task(
         description=f"""
@@ -359,15 +378,16 @@ You are the Senior Strategy Partner.
 
 Prepare the final professional consulting report for:
 
+Business:
 {business_name}
 
 {business_brief}
 
-You have received the work of the specialist consultants.
+You have received reports from six specialist consultants.
 
 Integrate their findings into ONE coherent business strategy report.
 
-The report must contain:
+The final report must contain the following sections:
 
 1. Executive Summary
 
@@ -409,39 +429,60 @@ The report must contain:
 
 20. Conclusion
 
-IMPORTANT:
+IMPORTANT QUALITY RULES:
 
 - Do not invent facts.
 - Do not invent financial figures.
-- Clearly identify assumptions.
+- Clearly distinguish facts from assumptions.
 - Clearly identify missing information.
-- Distinguish client-provided information from analysis.
+- Do not blindly accept previous consultant assumptions.
+- Resolve contradictions where possible.
+- Highlight important uncertainties.
 - Keep recommendations practical.
-- Use professional consulting language.
+- Use professional management consulting language.
 - Avoid unnecessary repetition.
+- Use tables where they improve clarity.
 """,
-
         expected_output="""
-A complete professional business strategy consulting report in
-well-structured Markdown with headings, tables where useful,
-strategic analysis, risks, implementation roadmap and KPIs.
+A complete professional business strategy consulting report
+written in well-structured Markdown.
+
+The report should contain:
+
+- Executive summary
+- Business analysis
+- Industry analysis
+- Market and customer analysis
+- Competitive analysis
+- Business model analysis
+- Financial considerations
+- SWOT analysis
+- Strategic options
+- Strategic direction
+- Growth strategy
+- Risk analysis
+- Implementation roadmap
+- 90-day action plan
+- 12-month action plan
+- KPIs
+- Assumptions
+- Information gaps
+- Conclusion
 """,
-
         agent=senior_partner,
-
         context=[
             research_task,
             customer_task,
             competitor_task,
             financial_task,
             strategy_task,
-            risk_task
-        ]
+            risk_task,
+        ],
     )
 
-    # --------------------------------------------------
-    # BUILD CREW
-    # --------------------------------------------------
+    # ==========================================================
+    # 11. BUILD CREW
+    # ==========================================================
 
     crew = Crew(
         agents=[
@@ -451,9 +492,8 @@ strategic analysis, risks, implementation roadmap and KPIs.
             financial_analyst,
             strategy_consultant,
             risk_analyst,
-            senior_partner
+            senior_partner,
         ],
-
         tasks=[
             research_task,
             customer_task,
@@ -461,17 +501,15 @@ strategic analysis, risks, implementation roadmap and KPIs.
             financial_task,
             strategy_task,
             risk_task,
-            final_report_task
+            final_report_task,
         ],
-
         process=Process.sequential,
-
-        verbose=True
+        verbose=True,
     )
 
-    # --------------------------------------------------
-    # RUN CREW
-    # --------------------------------------------------
+    # ==========================================================
+    # 12. RUN CONSULTING TEAM
+    # ==========================================================
 
     result = crew.kickoff()
 
