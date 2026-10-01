@@ -16,14 +16,14 @@ def get_groq_api_key():
 
 
 def get_llm():
-    """Create CrewAI LLM connected to Groq."""
+    """Create the CrewAI LLM connected to Groq."""
 
     api_key = get_groq_api_key()
 
     if not api_key:
         raise ValueError(
             "GROQ_API_KEY is missing. "
-            "Please add GROQ_API_KEY to Streamlit Secrets."
+            "Please add it to Streamlit Secrets."
         )
 
     return LLM(
