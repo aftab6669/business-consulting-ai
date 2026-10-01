@@ -4,7 +4,7 @@ from crewai import LLM
 
 
 def get_groq_api_key():
-    """Get Groq API key from Streamlit secrets or environment variables."""
+    """Get Groq API key from Streamlit Secrets or environment variables."""
 
     try:
         if "GROQ_API_KEY" in st.secrets:
@@ -16,19 +16,18 @@ def get_groq_api_key():
 
 
 def get_llm():
-    """Create the CrewAI LLM connected to Groq."""
+    """Create CrewAI LLM connected to Groq."""
 
     api_key = get_groq_api_key()
 
     if not api_key:
         raise ValueError(
             "GROQ_API_KEY is missing. "
-            "Add it to Streamlit Secrets before running the application."
+            "Please add GROQ_API_KEY to Streamlit Secrets."
         )
 
     return LLM(
         model="openai/gpt-oss-120b",
-        custom_openai=True,
         base_url="https://api.groq.com/openai/v1",
         api_key=api_key,
         temperature=0.2,
