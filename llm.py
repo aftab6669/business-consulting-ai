@@ -16,7 +16,7 @@ def get_groq_api_key():
 
 
 def get_llm():
-    """Create the CrewAI LLM using Groq's OpenAI-compatible API."""
+    """Create CrewAI LLM connected to Groq."""
 
     api_key = get_groq_api_key()
 
@@ -28,6 +28,7 @@ def get_llm():
 
     return LLM(
         model="openai/gpt-oss-120b",
+        custom_openai=True,
         base_url="https://api.groq.com/openai/v1",
         api_key=api_key,
         temperature=0.2,
